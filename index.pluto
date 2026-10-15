@@ -4196,6 +4196,7 @@ local function computerify_drop_from_wiki(reward)
 		probability = reward[3] / 100
 	}
 end
+DropTables.Missions.Razorback.InternalName ??= "/Supplementals/BossMissionRewards/RazorbackRewards"
 for DropTables.Missions as mission do
 	if not mission.InternalName then
 		continue
@@ -4229,7 +4230,7 @@ for DropTables.Missions as mission do
 		end
 		for mission.InternalName as InternalName do
 			if not ExportRewards[InternalName] then
-				if InternalName ~= "/Lotus/Types/Game/MissionDecks/EventMissionRewards/ScarletSpearRailjackRewards" and InternalName ~= "/Lotus/Types/Game/MissionDecks/EventMissionRewards/ScarletSpearCondrixRewards" then
+				if InternalName:sub(1, 15) ~= "/Supplementals/" and InternalName ~= "/Lotus/Types/Game/MissionDecks/EventMissionRewards/ScarletSpearRailjackRewards" and InternalName ~= "/Lotus/Types/Game/MissionDecks/EventMissionRewards/ScarletSpearCondrixRewards" then
 					validate_path(InternalName)
 				end
 				ExportRewards.__order:insert(InternalName)
