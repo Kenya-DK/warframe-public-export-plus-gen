@@ -4585,7 +4585,16 @@ do
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Enemies", true) as file do
 		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
-			local obj = obj_from_path(path)
+			local obj = obj_cache[path]
+			if not obj then
+				-- Most of the ~15k files here don't have AvatarTypes, so check the raw text before paying for json.decode.
+				local data = io.contents(file)
+				if not data:find('"AvatarTypes"', 1, true) then
+					continue
+				end
+				obj = data |> json.decode|json.withorder|
+				obj_cache[path] = obj
+			end
 			if obj.data?.AvatarTypes then
 				if obj_has_parent(path, "/EE/Types/Npc/NpcAgent") then
 					local avatarTypes = {
