@@ -35,6 +35,7 @@ local function path_get_parent(path)
 	return parts:concat("/")
 end
 
+local resolve_cache = {}
 local function obj_resolve_path(path, rel)
 	if #rel == 0 then
 		return nil
@@ -42,14 +43,25 @@ local function obj_resolve_path(path, rel)
 	if rel[1] == '/' then
 		return rel
 	end
+	-- The result only depends on the directory of 'path', so cache by that to avoid repeated filesystem checks.
+	local key = path:match("^(.*)/") .. "|" .. rel
+	local cached = resolve_cache[key]
+	if cached ~= nil then
+		return cached or nil
+	end
+	local result
 	local base = path
 	repeat
 		base = path_get_parent(base)
 		if #base == 0 then
-			return nil
+			break
 		end
-	until io.exists(PACKAGES_BIN_BASE .. base .. "/" .. rel .. ".json")
-	return base .. "/" .. rel
+		if io.exists(PACKAGES_BIN_BASE .. base .. "/" .. rel .. ".json") then
+			result = base .. "/" .. rel
+		end
+	until result
+	resolve_cache[key] = result or false
+	return result
 end
 
 local obj_has_parent
