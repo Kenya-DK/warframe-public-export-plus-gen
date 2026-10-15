@@ -948,7 +948,7 @@ for LANGS as lang do
 	end
 	if lang == "en" then
 		for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Keys", true) as path do
-			if io.isfile(path) then
+			if path:endswith(".json") then
 				local uniqueName = path:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 				if obj_has_parent(uniqueName, "/Lotus/Types/Game/KeyItem") and not ExportKeys[uniqueName] then
 					add_key(uniqueName)
@@ -1795,7 +1795,7 @@ do
 		end
 		if lang == "en" then
 			for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Upgrades/CosmeticEnhancers", true) as file do
-				if io.isfile(file) then
+				if file:endswith(".json") then
 					local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 					local obj = obj_from_path(path)
 					if obj.parent == "/Lotus/Types/Game/BaseAntiqueCosmeticEnhancer" then
@@ -2686,17 +2686,17 @@ for LANGS as lang do
 	if lang == "en" then
 		local paths = {}
 		for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Friendly/PlayerControllable/Abilities") as file do
-			if io.isfile(file) then
+			if file:endswith(".json") then
 				paths:insert(file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/"))
 			end
 		end
 		for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Powersuits/PowersuitAbilities") as file do
-			if io.isfile(file) then
+			if file:endswith(".json") then
 				paths:insert(file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/"))
 			end
 		end
 		for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Vehicles/Motorcycle") as file do
-			if io.isfile(file) then
+			if file:endswith(".json") then
 				paths:insert(file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/"))
 			end
 		end
@@ -3033,7 +3033,7 @@ for LANGS as lang do
 		write_data_file("ExportWeapons.json", ExportWeapons_dedup)
 
 		for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Weapons/CrewShip/Missiles", true) as file do
-			if io.isfile(file) then
+			if file:endswith(".json") then
 				local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 				if path ~= "/Lotus/Weapons/CrewShip/Missiles/GhostShipMissileLauncherWeapon"
 					and obj_has_parent(path, "/Lotus/Weapons/CrewShip/RailjackOrdnanceWeapon")
@@ -3089,7 +3089,7 @@ print "Creating ExportAnimals..."
 do
 	local ExportAnimals = { __order = {} }
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/NeutralCreatures/Conservation", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			local ItemReward = obj_find_property_2(path, "HuntingInfo", "ItemReward")
 			if ItemReward and ItemReward ~= "" then
@@ -3125,7 +3125,7 @@ print "Creating ExportBoosterPacks..."
 do
 	local ExportBoosterPacks = { __order = {} }
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/BoosterPacks", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			--local obj = obj_from_path(path)
 			if path ~= "/Lotus/Types/BoosterPacks/EntratiLabsArcanePackBase"
@@ -3181,7 +3181,7 @@ local booster_store_items = {}
 do
 	local ExportBoosters = { __order = {} }
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/StoreItems/Boosters", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			local obj = obj_from_path(path)
 			if obj.parent == "/Lotus/Types/Game/StoreItem" --[[and obj.data.ProductCategory == "Boosters"]]
@@ -3409,7 +3409,7 @@ do
 		end
 	end
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Challenges/Seasons", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local challenge = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			if Standing := obj_find_property(challenge, "Standing") then
 				local name = challenge:split("/"):back()
@@ -3430,7 +3430,7 @@ do
 		end
 	end
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Challenges/Calendar1999", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local challenge = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			if challenge:sub(-5) ~= "Base" then
 				if name := obj_find_property(challenge, "name") then
@@ -3478,7 +3478,7 @@ do
 		"/Lotus/Types/Challenges/Titles"
 	} as path do
 		for io.listdir(PACKAGES_BIN_BASE .. path) as file do
-			if io.isfile(file) then
+			if file:endswith(".json") then
 				local challenge = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 				if challenge:sub(-5) ~= "Base" then
 					paths:insert(challenge)
@@ -3720,12 +3720,12 @@ print "Creating ExportEmailItems..."
 do
 	local paths = {}
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Items/EmailItems", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			paths:insert(file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/"))
 		end
 	end
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Keys", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			paths:insert(file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/"))
 		end
 	end
@@ -4583,7 +4583,7 @@ do
 		end
 	end
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Enemies", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			local obj = obj_from_path(path)
 			if obj.data?.AvatarTypes then
@@ -4751,7 +4751,7 @@ do
 	local ExportSyndicates = { __order = {} }
 	-- Note: These are also listed in LotusGameConfig
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Syndicates", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			local obj = obj_from_path(path)
 			if obj.parent == "/Lotus/Types/Game/Syndicate" then
@@ -4898,7 +4898,7 @@ end
 do
 	local ExportTilesets = { __order = {} }
 	for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/Game/RegionTilesets", true) as file do
-		if io.isfile(file) then
+		if file:endswith(".json") then
 			local path = file:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
 			local obj = obj_from_path(path)
 			if obj.data.MissionPermutations then
