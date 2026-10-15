@@ -531,36 +531,36 @@ for LANGS as lang do
 			end
 		end
 	end
-	for {
-		"/Lotus/Upgrades/Skins/Horse/HorseHelmetDrapery",
-		"/Lotus/Upgrades/Skins/Horse/HorseSaddleDrapery",
-		"/Lotus/Upgrades/Skins/Horse/HorseTailDrapery",
-	} as uniqueName do
-		local name = obj_find_property(uniqueName, "LocalizeTag")
-		local description = obj_find_property(uniqueName, "LocalizeDescTag")
-		import_from_languages_bin(name)
-		import_from_languages_bin(description)
-		ExportCustoms.ExportCustoms:insert({
-			__order = { "name", "codexSecret", "description", "icon", "productCategory", "tradable" },
-			uniqueName = uniqueName,
-			name = name,
-			codexSecret = false,
-			description = description,
-			icon = obj_find_property(uniqueName, "Icon"),
-			productCategory = "WeaponSkins",
-			tradable = (obj_find_property(uniqueName, "TradeCapability") == "RO_ALWAYS"),
-		})
-	end
-	for ExportCustoms.ExportCustoms as item do
-		item.__order:insert("platinumCost")
-		item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
-
-		if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
-			item.__order:insert("excludeFromMarket")
-			item.excludeFromMarket = true
-		end
-	end
 	if lang == "en" then
+		for {
+			"/Lotus/Upgrades/Skins/Horse/HorseHelmetDrapery",
+			"/Lotus/Upgrades/Skins/Horse/HorseSaddleDrapery",
+			"/Lotus/Upgrades/Skins/Horse/HorseTailDrapery",
+		} as uniqueName do
+			local name = obj_find_property(uniqueName, "LocalizeTag")
+			local description = obj_find_property(uniqueName, "LocalizeDescTag")
+			import_from_languages_bin(name)
+			import_from_languages_bin(description)
+			ExportCustoms.ExportCustoms:insert({
+				__order = { "name", "codexSecret", "description", "icon", "productCategory", "tradable" },
+				uniqueName = uniqueName,
+				name = name,
+				codexSecret = false,
+				description = description,
+				icon = obj_find_property(uniqueName, "Icon"),
+				productCategory = "WeaponSkins",
+				tradable = (obj_find_property(uniqueName, "TradeCapability") == "RO_ALWAYS"),
+			})
+		end
+		for ExportCustoms.ExportCustoms as item do
+			item.__order:insert("platinumCost")
+			item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
+
+			if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
+				item.__order:insert("excludeFromMarket")
+				item.excludeFromMarket = true
+			end
+		end
 		write_mapped_data_file("ExportCustoms.json", ExportCustoms.ExportCustoms)
 	end
 end
@@ -619,41 +619,43 @@ do
 				store_tag(lang, item, "description", obj_find_property(item.uniqueName, "LocalizeDescTag"))
 			end
 
-			item.__order:insert(4, "icon")
-			item.icon = obj_find_property(item.uniqueName, "Icon")
+			if lang == "en" then
+				item.__order:insert(4, "icon")
+				item.icon = obj_find_property(item.uniqueName, "Icon")
 
-			item.__order:insert(5, "base")
-			item.base = obj_find_base(item.uniqueName)
+				item.__order:insert(5, "base")
+				item.base = obj_find_base(item.uniqueName)
 
-			item.__order:insert("alwaysAvailable")
-			item.alwaysAvailable = (obj_find_property(item.uniqueName, "AlwaysAvailable") == 1) ? true : nil
+				item.__order:insert("alwaysAvailable")
+				item.alwaysAvailable = (obj_find_property(item.uniqueName, "AlwaysAvailable") == 1) ? true : nil
 
-			item.__order:insert("platinumCost")
-			item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
+				item.__order:insert("platinumCost")
+				item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
 
-			if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
-				item.__order:insert("excludeFromMarket")
-				item.excludeFromMarket = true
-			end
+				if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
+					item.__order:insert("excludeFromMarket")
+					item.excludeFromMarket = true
+				end
 
-			if item.hexColours and lang == "en" then
-				local name_en = dicts.en[item.name]
-				if palette := palettes:find(|x| -> x.options and x.options.legacy and x.name == name_en) then
-					item.__order:insert("legacyColours")
-					item.legacyColours = {}
-					for palette.colors as colour do
-						local r = (colour >> 16) & 0xff
-						local g = (colour >> 8) & 0xff
-						local b = colour & 0xff
-						item.legacyColours:insert(format_colour(r, g, b))
+				if item.hexColours and lang == "en" then
+					local name_en = dicts.en[item.name]
+					if palette := palettes:find(|x| -> x.options and x.options.legacy and x.name == name_en) then
+						item.__order:insert("legacyColours")
+						item.legacyColours = {}
+						for palette.colors as colour do
+							local r = (colour >> 16) & 0xff
+							local g = (colour >> 8) & 0xff
+							local b = colour & 0xff
+							item.legacyColours:insert(format_colour(r, g, b))
+						end
 					end
 				end
-			end
 
-			if TitleTag := obj_find_property(item.uniqueName, "TitleTag") then
-				item.__order:insert("titleTag")
-				item.titleTag = TitleTag
-				import_from_languages_bin(TitleTag)
+				if TitleTag := obj_find_property(item.uniqueName, "TitleTag") then
+					item.__order:insert("titleTag")
+					item.titleTag = TitleTag
+					import_from_languages_bin(TitleTag)
+				end
 			end
 		end
 		if lang == "en" then
@@ -711,28 +713,30 @@ for LANGS as lang do
 			store_tag(lang, item, "description", obj_find_property(item.uniqueName, "LocalizeDescTag"))
 		end
 
-		item.__order:insert(4, "icon")
-		item.icon = obj_find_property(item.uniqueName, "Icon")
+		if lang == "en" then
+			item.__order:insert(4, "icon")
+			item.icon = obj_find_property(item.uniqueName, "Icon")
 
-		--item.__order:insert(7, "productCategory")
-		--item.productCategory = obj_find_property(to_storeitem(item.uniqueName), "ProductCategory")
+			--item.__order:insert(7, "productCategory")
+			--item.productCategory = obj_find_property(to_storeitem(item.uniqueName), "ProductCategory")
 
-		item.__order:insert("purchaseQuantity")
-		item.purchaseQuantity = obj_find_property(item.uniqueName, "PurchaseQuantity")
+			item.__order:insert("purchaseQuantity")
+			item.purchaseQuantity = obj_find_property(item.uniqueName, "PurchaseQuantity")
 
-		item.__order:insert("creditsCost")
-		item.creditsCost = obj_find_property(item.uniqueName, "RegularPrice")
+			item.__order:insert("creditsCost")
+			item.creditsCost = obj_find_property(item.uniqueName, "RegularPrice")
 
-		item.__order:insert("platinumCost")
-		item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
+			item.__order:insert("platinumCost")
+			item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
 
-		if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
-			item.__order:insert("excludeFromMarket")
-			item.excludeFromMarket = true
-		end
+			if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
+				item.__order:insert("excludeFromMarket")
+				item.excludeFromMarket = true
+			end
 
-		if name := dicts.en[item.name] then
-			name_to_storeitem_map[name:lower()] = to_storeitem(item.uniqueName)
+			if name := dicts.en[item.name] then
+				name_to_storeitem_map[name:lower()] = to_storeitem(item.uniqueName)
+			end
 		end
 	end
 	if lang == "en" then
@@ -2013,55 +2017,57 @@ for LANGS as lang do
 		store_tag(lang, item, "name", obj_find_property(item.uniqueName, "LocalizeTag"))
 		store_tag(lang, item, "description", obj_find_property(item.uniqueName, "LocalizeDescTag"))
 
-		item.__order:insert(3, "icon")
-		item.icon = obj_find_property(item.uniqueName, "Icon")
+		if lang == "en" then
+			item.__order:insert(3, "icon")
+			item.icon = obj_find_property(item.uniqueName, "Icon")
 
-		item.__order:insert("defaultWeapon")
-		item.defaultWeapon = obj_find_property(item.uniqueName, "DefaultWeapon")
+			item.__order:insert("defaultWeapon")
+			item.defaultWeapon = obj_find_property(item.uniqueName, "DefaultWeapon")
 
-		item.__order:insert("exalted")
-		item.exalted = obj_find_property(item.uniqueName, "AdditionalItems")--?:map(|x| -> obj_resolve_path(item.uniqueName, x))
+			item.__order:insert("exalted")
+			item.exalted = obj_find_property(item.uniqueName, "AdditionalItems")--?:map(|x| -> obj_resolve_path(item.uniqueName, x))
 
-		export_defaultUpgrades(item)
-	end
-	for {
-		"/Lotus/Types/Friendly/Pets/MoaPets/MoaPetPowerSuit",
-		"/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetAPowerSuit",
-		"/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetBPowerSuit",
-		"/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetCPowerSuit",
-	} as uniqueName do
-		local name = obj_find_property(uniqueName, "LocalizeTag")
-		local description = obj_find_property(uniqueName, "LocalizeDescTag")
-		import_from_languages_bin(name)
-		import_from_languages_bin(description)
-		local defaultWeapon = obj_find_property(uniqueName, "DefaultWeapon")
-		if defaultWeapon then
-			defaultWeapon	= obj_resolve_path(uniqueName, defaultWeapon)
-		end
-		local item = {
-			__order = { "name", "icon", "codexSecret", "description", "productCategory", "defaultWeapon", "exalted" },
-			uniqueName = uniqueName,
-			name = name,
-			icon = obj_find_property(uniqueName, "Icon"),
-			codexSecret = false,
-			description = description,
-			productCategory = "MoaPets",
-			defaultWeapon = defaultWeapon,
-			exalted = obj_find_property(uniqueName, "AdditionalItems"),
-		}
-		export_defaultUpgrades(item)
-		ExportSentinels:insert(item)
-	end
-	for ExportSentinels as item do
-		item.__order:insert("platinumCost")
-		item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
-
-		if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
-			item.__order:insert("excludeFromMarket")
-			item.excludeFromMarket = true
+			export_defaultUpgrades(item)
 		end
 	end
 	if lang == "en" then
+		for {
+			"/Lotus/Types/Friendly/Pets/MoaPets/MoaPetPowerSuit",
+			"/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetAPowerSuit",
+			"/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetBPowerSuit",
+			"/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetCPowerSuit",
+		} as uniqueName do
+			local name = obj_find_property(uniqueName, "LocalizeTag")
+			local description = obj_find_property(uniqueName, "LocalizeDescTag")
+			import_from_languages_bin(name)
+			import_from_languages_bin(description)
+			local defaultWeapon = obj_find_property(uniqueName, "DefaultWeapon")
+			if defaultWeapon then
+				defaultWeapon	= obj_resolve_path(uniqueName, defaultWeapon)
+			end
+			local item = {
+				__order = { "name", "icon", "codexSecret", "description", "productCategory", "defaultWeapon", "exalted" },
+				uniqueName = uniqueName,
+				name = name,
+				icon = obj_find_property(uniqueName, "Icon"),
+				codexSecret = false,
+				description = description,
+				productCategory = "MoaPets",
+				defaultWeapon = defaultWeapon,
+				exalted = obj_find_property(uniqueName, "AdditionalItems"),
+			}
+			export_defaultUpgrades(item)
+			ExportSentinels:insert(item)
+		end
+		for ExportSentinels as item do
+			item.__order:insert("platinumCost")
+			item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
+
+			if obj_find_property(to_storeitem(item.uniqueName), "ShowInMarket") == 0 then
+				item.__order:insert("excludeFromMarket")
+				item.excludeFromMarket = true
+			end
+		end
 		write_mapped_data_file("ExportSentinels.json", ExportSentinels)
 	end
 end
