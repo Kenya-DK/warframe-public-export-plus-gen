@@ -1071,6 +1071,15 @@ local MissionData do
 	MissionData = load("-- @pluto_warnings disable-all\n"..io.contents("extras/Missions.lua"))()
 	table.sort=_sort
 end
+local wiki_mission_by_name, wiki_mission_by_internal_name = {}, {}
+for ipairs(MissionData.MissionDetails) as mission do
+	if mission.Name then
+		wiki_mission_by_name[mission.Name] ??= mission
+	end
+	if mission.InternalName then
+		wiki_mission_by_internal_name[mission.InternalName] ??= mission
+	end
+end
 local DropTables = dofile("extras/DropTables.lua")
 do
 	local starchart_export = io.contents("extras/starchart-export.json") |> json.decode|json.withorder|
@@ -1209,7 +1218,7 @@ do
 			local outgoing = {}
 			if mission.NextNodes then
 				for mission.NextNodes as nextNode do
-					if nextNodeData := MissionData.MissionDetails:find(|x| -> x.Name == nextNode) then
+					if nextNodeData := wiki_mission_by_name[nextNode] then
 						if nextNodeData.InternalName and nextNodeData.InternalName ~= "" then
 							outgoing:insert(nextNodeData.InternalName)
 						end
@@ -1275,7 +1284,7 @@ do
 
 				item.__order:insert("rewardManifests")
 				item.rewardManifests = {}
-				if wiki_data := MissionData.MissionDetails:find(|x| -> x.InternalName == item.uniqueName) then
+				if wiki_data := wiki_mission_by_internal_name[item.uniqueName] then
 					item.masteryExp = wiki_data.MasteryExp or 0
 
 					if type(wiki_data.Enemy) == "table" then
@@ -1366,6 +1375,15 @@ do
 
 			-- insert missing solnodes based on wiki data
 			-- nodeType, in order: NT_MISSION, NT_EVENT, NT_PVP, NT_HUB, NT_CLAN, NT_EMPTY, NT_SHORTCUT, NT_JUNCTION, NT_BONUS_MISSION
+			-- Regions are only ever appended below, so the index is lazily extended with new entries on each lookup.
+			local region_exists, num_indexed_regions = {}, 0
+			local function has_region(uniqueName)
+				while num_indexed_regions < #ExportRegions.ExportRegions do
+					++num_indexed_regions
+					region_exists[ExportRegions.ExportRegions[num_indexed_regions].uniqueName] = true
+				end
+				return region_exists[uniqueName]
+			end
 			for ipairs(MissionData.MissionDetails) as mission do
 				if mission.InternalName ~= ""
 					and mission.InternalName ~= "ToggleBootLevel"
@@ -1373,7 +1391,7 @@ do
 					and mission.InternalName ~= "GrendelKeyBMissionName"
 					and mission.InternalName ~= "GrendelKeyCMissionName"
 					and mission.InternalName ~= "/Lotus/Types/Keys/SyndicateCacheHuntBaseKeyItem"
-					and not ExportRegions.ExportRegions:find(|x| -> x.uniqueName == mission.InternalName)
+					and not has_region(mission.InternalName)
 				then
 					if mission.InternalName == "EventNode763" then
 						ExportRegions.ExportRegions:insert({
@@ -1678,7 +1696,10 @@ local function dofile_patched(path)
 	return assert(load(src, "@" .. path))()
 end
 
-local wikiVoid = dofile_patched("extras/wiki/Void.lua").RelicData:values()
+local wiki_relic_by_name = {}
+for dofile_patched("extras/wiki/Void.lua").RelicData:values() as relic do
+	wiki_relic_by_name[relic.Name] ??= relic
+end
 local wikiVersionData = dofile("extras/wiki/Version.lua")
 local ExportRewards = { __order = {} }
 do
@@ -1686,6 +1707,7 @@ do
 	for LANGS as lang do
 		local ExportRelicArcane = io.contents(PE_BASE .. "/ExportRelicArcane_" .. lang .. ".json") |> json.decode|json.withorder|
 		local ExportArcanes = {}
+		local arcane_exists = {}
 		local ExportRelics = {}
 		for ExportRelicArcane.ExportRelicArcane as item do
 			if item.relicRewards then
@@ -1732,7 +1754,7 @@ do
 						name_to_storeitem_map[$"{item.era} {item.category} (Radiant)":lower()] = to_storeitem(item.uniqueName) -- Wiki
 					end
 
-					if wiki_data := wikiVoid:find(|x| -> x.Name == $"{item.era} {item.category}") then
+					if wiki_data := wiki_relic_by_name[$"{item.era} {item.category}"] then
 						local version = (wikiVersionData.Versions[wiki_data.Introduced] or wikiVersionData.Aliases[wiki_data.Introduced])
 						item.__order:insert("introducedAt")
 						item.introducedAt = version.Timestamp
@@ -1767,6 +1789,7 @@ do
 						name_to_storeitem_map[dicts.en[item.name]:lower()] = to_storeitem(item.uniqueName)
 					end
 					ExportArcanes:insert(item)
+					arcane_exists[item.uniqueName] = true
 				end
 			end
 		end
@@ -1788,8 +1811,9 @@ do
 							fusionLimit = fusion_level_to_rank(obj_find_property(path, "FusionLimit") or "QA_MEDIUM"),
 							distillPointValue = obj_find_property(path, "BaseDistillPointValue"),
 						}
-						assert(not ExportArcanes:find(|x| -> x.uniqueName == path))
+						assert(not arcane_exists[path])
 						ExportArcanes:insert(arcane)
+						arcane_exists[path] = true
 						name_to_storeitem_map[dicts.en[LocalizeTag]:lower()] = to_storeitem(path)
 					end
 				end
@@ -2467,7 +2491,19 @@ for LANGS as lang do
 	end
 end
 
-local wikiWarframes = dofile("extras/wiki/Warframes.lua")
+local function index_wiki_by_internal_name(categories)
+	local index = {}
+	for categories as category do
+		for category as entry do
+			if entry.InternalName then
+				index[entry.InternalName] ??= entry
+			end
+		end
+	end
+	return index
+end
+
+local wiki_warframe_by_internal_name = index_wiki_by_internal_name(dofile("extras/wiki/Warframes.lua"))
 
 print "Processing ExportWarframes..."
 local baseSuitToInnateDamageTag = {}
@@ -2636,13 +2672,10 @@ for LANGS as lang do
 				warframe.excludeFromMarket = true
 			end
 
-			for wikiWarframes as category do
-				if wiki_data := category:find(|x| -> x.InternalName == warframe.uniqueName) then
-					local version = (wikiVersionData.Versions[wiki_data.Introduced] or wikiVersionData.Aliases[wiki_data.Introduced])
-					warframe.__order:insert("introducedAt")
-					warframe.introducedAt = version.Timestamp
-					break
-				end
+			if wiki_data := wiki_warframe_by_internal_name[warframe.uniqueName] then
+				local version = (wikiVersionData.Versions[wiki_data.Introduced] or wikiVersionData.Aliases[wiki_data.Introduced])
+				warframe.__order:insert("introducedAt")
+				warframe.introducedAt = version.Timestamp
 			end
 		end
 	end
@@ -2695,11 +2728,11 @@ for LANGS as lang do
 	end
 end
 
-local wikiWeapons = {
-	primary = dofile("extras/wiki/Weapons/primary.lua"),
-	secondary = dofile("extras/wiki/Weapons/secondary.lua"),
-	melee = dofile("extras/wiki/Weapons/melee.lua"),
-}
+local wiki_weapon_by_internal_name = index_wiki_by_internal_name({
+	dofile("extras/wiki/Weapons/primary.lua"),
+	dofile("extras/wiki/Weapons/secondary.lua"),
+	dofile("extras/wiki/Weapons/melee.lua"),
+})
 
 print "Processing ExportWeapons..."
 local damageTypes = {
@@ -2956,13 +2989,10 @@ for LANGS as lang do
 					weapon.donationStandingBonus = DonationStandingBonus
 				end
 
-				for wikiWeapons as category do
-					if wiki_data := category:find(|x| -> x.InternalName == weapon.uniqueName) then
-						local version = (wikiVersionData.Versions[wiki_data.Introduced] or wikiVersionData.Aliases[wiki_data.Introduced])
-						weapon.__order:insert("introducedAt")
-						weapon.introducedAt = version.Timestamp
-						break
-					end
+				if wiki_data := wiki_weapon_by_internal_name[weapon.uniqueName] then
+					local version = (wikiVersionData.Versions[wiki_data.Introduced] or wikiVersionData.Aliases[wiki_data.Introduced])
+					weapon.__order:insert("introducedAt")
+					weapon.introducedAt = version.Timestamp
 				end
 
 				ExportWeapons_dedup.__order:insert(weapon.uniqueName)
