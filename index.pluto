@@ -4354,7 +4354,9 @@ do
 				if processed_enemy_names[enemy_name] then
 					enemy_name ..= " (duplicate)"
 				end
-				if not processed_enemy_names[enemy_name] then
+				if enemy_name == "void surplus" then
+					items = nil
+				elseif not processed_enemy_names[enemy_name] then
 					processed_enemy_names[enemy_name] = true
 					items = {}
 					drops_by_enemy_name[enemy_name] ??= {}
