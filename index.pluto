@@ -1,8 +1,5 @@
--- Before running this script, ensure datafiles & materials in extras have been extracted, and verify the following checkout directories:
-$define PE_BASE = "../warframe-public-export" -- https://github.com/calamity-inc/warframe-public-export
-$define OUTPUT_BASE = "../warframe-public-export-plus/"
-$define LANGUAGES_BASE = "../warframe-languages-bin-data/" -- https://github.com/calamity-inc/warframe-languages-bin-data
-$define PACKAGES_BIN_BASE = [[F:\warframe-packages-bin-data]] -- https://github.com/calamity-inc/warframe-packages-bin-data
+-- Before running this script, ensure datafiles & materials in extras have been extracted, and verify the checkout directories in deps.pluto.
+$include "deps.pluto"
 
 $define MSGPACK = false
 
@@ -2074,7 +2071,7 @@ end
 
 print "Processing ExportUpgrades..."
 do
-	local exclude_mods = io.contents("../warframe-build-evaluator/data-generator/exclude-mods.json") |> json.decode
+	local exclude_mods = io.contents(BUILD_EVALUATOR_BASE .. "data-generator/exclude-mods.json") |> json.decode
 	local wikiMods = dofile("extras/wiki/Mods.lua").Mods:values()
 	for LANGS as lang do
 		local ExportUpgrades = io.contents(PE_BASE .. "/ExportUpgrades_" .. lang .. ".json") |> json.decode|json.withorder|
@@ -3805,7 +3802,7 @@ local function computerify_drop(type, probability)
 		probability = probability
 	}
 end
-dofile("../pluto-query/query.pluto")
+dofile(PLUTO_QUERY_BASE .. "query.pluto")
 local html = (io.contents("extras/droptables.html"):gsub("</?tbody>", "")) |> xml.decode|"html"|
 do
 	local function prepare_deck(deck_name)
