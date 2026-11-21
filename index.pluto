@@ -32,6 +32,20 @@ local function path_get_parent(path)
 	return parts:concat("/")
 end
 
+local function path_less(a, b)
+	local A, B = a:split("/"), b:split("/")
+	for i = 1, math.min(#A, #B) do
+		if A[i] ~= B[i] then
+			local a_is_dir, b_is_dir = i < #A, i < #B
+			if a_is_dir ~= b_is_dir then
+				return a_is_dir
+			end
+			return A[i] < B[i]
+		end
+	end
+	return #A < #B
+end
+
 local resolve_cache = {}
 local function obj_resolve_path(path, rel)
 	if #rel == 0 then
@@ -452,6 +466,54 @@ end
 print "Processing ExportCustoms..."
 for LANGS as lang do
 	local ExportCustoms = io.contents(PE_BASE .. "/ExportCustoms_" .. lang .. ".json") |> json.decode|json.withorder|
+	if lang == "en" then
+		-- Public Export omits customisations with ShowInInventory=0 even when they're sold in bundles (e.g. horse draperies, some Operator hairs),
+		-- so recover them from bundles' PackageComponents. They are then processed like any other entry below.
+		local known = {}
+		for ExportCustoms.ExportCustoms as item do
+			known[item.uniqueName] = true
+		end
+		local supplementals = {}
+		for io.listdir(PACKAGES_BIN_BASE .. "/Lotus/Types/StoreItems", true) as path do
+			if path:endswith(".json") then
+				local bundlePath = path:sub(#PACKAGES_BIN_BASE + 1, -6):replace("\\", "/")
+				if PackageComponents := obj_find_property(bundlePath, "PackageComponents") then
+					for PackageComponents as component do
+						local storeItem = obj_resolve_path(bundlePath, component.TypeName)
+						if storeItem and storeItem:sub(1, 18) == "/Lotus/StoreItems/" then
+							local uniqueName = from_storeitem(storeItem)
+							if not known[uniqueName]
+								and obj_find_property(uniqueName, "ShowInInventory") == 0
+								and languages_bin_dicts.en[obj_find_property(uniqueName, "LocalizeTag")]
+								and obj_has_parent(storeItem, "/Lotus/Types/Game/StoreItemSpecializations/LotusSuitCustomizationStoreItem")
+							then
+								known[uniqueName] = true
+								supplementals:insert(uniqueName)
+							end
+						end
+					end
+				end
+			end
+		end
+		for supplementals as uniqueName do
+			local item = {
+				__order = { "name", "codexSecret" },
+				uniqueName = uniqueName,
+				name = obj_find_property(uniqueName, "LocalizeTag"),
+				codexSecret = (obj_find_property(uniqueName, "CodexSecret") == 1),
+			}
+			import_from_languages_bin(item.name)
+			if obj_find_property(uniqueName, "ExcludeFromCodex") ~= 0 then
+				item.__order:insert("excludeFromCodex")
+				item.excludeFromCodex = true
+			end
+			item.__order:insert("description")
+			item.description = obj_find_property(uniqueName, "LocalizeDescTag") or "/Lotus/Language/Items/GenericSuitCustomizationDesc"
+			import_from_languages_bin(item.description)
+			ExportCustoms.ExportCustoms:insert(item)
+		end
+		ExportCustoms.ExportCustoms:sort(|a, b| -> path_less(a.uniqueName, b.uniqueName))
+	end
 	for ExportCustoms.ExportCustoms as item do
 		if item.name ~= nil then
 			local tag = obj_find_property(item.uniqueName, "LocalizeTag")
@@ -529,26 +591,6 @@ for LANGS as lang do
 		end
 	end
 	if lang == "en" then
-		for {
-			"/Lotus/Upgrades/Skins/Horse/HorseHelmetDrapery",
-			"/Lotus/Upgrades/Skins/Horse/HorseSaddleDrapery",
-			"/Lotus/Upgrades/Skins/Horse/HorseTailDrapery",
-		} as uniqueName do
-			local name = obj_find_property(uniqueName, "LocalizeTag")
-			local description = obj_find_property(uniqueName, "LocalizeDescTag")
-			import_from_languages_bin(name)
-			import_from_languages_bin(description)
-			ExportCustoms.ExportCustoms:insert({
-				__order = { "name", "codexSecret", "description", "icon", "productCategory", "tradable" },
-				uniqueName = uniqueName,
-				name = name,
-				codexSecret = false,
-				description = description,
-				icon = obj_find_property(uniqueName, "Icon"),
-				productCategory = "WeaponSkins",
-				tradable = (obj_find_property(uniqueName, "TradeCapability") == "RO_ALWAYS"),
-			})
-		end
 		for ExportCustoms.ExportCustoms as item do
 			item.__order:insert("platinumCost")
 			item.platinumCost = obj_find_property(item.uniqueName, "PremiumPrice")
